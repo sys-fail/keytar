@@ -1,0 +1,27 @@
+Drill report for /Users/ksnieckus/prj/keytar/cherry-huzzah32/cherry-huzzah32.kicad_pcb
+Created on Friday, November 15, 2019 at 08:20:02 PM
+
+Copper Layer Stackup:
+    =============================================================
+    L1 :  F.Cu                      front
+    L2 :  B.Cu                      back
+
+
+Drill file 'cherry-huzzah32-PTH.drl' contains
+    plated through holes:
+    =============================================================
+    T1  0.40mm  0.016"  (3 holes)
+    T2  0.90mm  0.035"  (28 holes)
+    T3  1.00mm  0.039"  (7 holes)
+    T4  1.50mm  0.059"  (32 holes)
+
+    Total plated holes count 70
+
+
+Drill file 'cherry-huzzah32-NPTH.drl' contains
+    unplated through holes:
+    =============================================================
+    T1  1.70mm  0.067"  (32 holes)
+    T2  4.00mm  0.157"  (16 holes)
+
+    Total unplated holes count 48
