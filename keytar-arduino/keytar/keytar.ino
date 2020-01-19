@@ -1,4 +1,4 @@
-#include <SPI.h>
+ #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -26,7 +26,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
 #include "HIDKeyboardTypes.h"
 #include <driver/adc.h>
 
-// columns / rows (where a column corresponds to a finger)
+// columns / rows (where a column corresponds to a finger )
 int pins[] = {27, 33, 15, 32, 34, 39, 36, 4};
 #define nrows 4
 #define ncols 4
