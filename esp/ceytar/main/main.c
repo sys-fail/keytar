@@ -7,6 +7,9 @@
 #include "esp_spi_flash.h"
 #include "driver/gpio.h"
 
+
+#include "ble_hid.h"
+
 // columns / rows (where a column corresponds to a finger)
 int pins[] = {32, 15, 33, 27, 34, 39, 36, 4};
 #define ncols 4
@@ -288,8 +291,8 @@ void keytar_scan_task(void* _) {
 103=Z 203=M 303=G 403=6
 104=` 204=] 304=- 404=3
 */
-
-char kmap[][nrows] = {"nav0", // col 2, row 1
+#include "usb_hid_keys.h"
+char kmapc[][nrows] = {"nav0", // col 2, row 1
 		      "r y7", // col 2, row 2
 		      "xcw4", // col 2, row 3
 		      "/='1", // col 2, row 4
@@ -305,25 +308,29 @@ char kmap[][nrows] = {"nav0", // col 2, row 1
 		      ".963", // col 3, row 4
 };
 
-#include "HIDKeyboardTypes.h"
-KEYMAP fnmap[] = {{0,0}, // dunna do anythin
-		  {0x28, 0},          /* LF  */  /* Keyboard Return (Enter) */
-		  {0, 0},             // magical "really forward key"
-		  {0x4f, 0},          /* RIGHT_ARROW */
-		  {0, 0},
-		  
-		  {0x2b, 0},          /* TAB */  /* Keyboard Tab */
-		  {0x52, 0},          /* UP_ARROW */
-		  {0x51, 0},          /* DOWN_ARROW */
-		  {0, 0},
-		  
-		  {0x2a, 0},          /* BS  */  /* Keyboard Delete (Backspace) */
-		  {0, 0},             /* ESC */
-		  {0x50, 0},          /* LEFT_ARROW */
-		  {0, 0},
+uint8_t kmap[][nrows] = {{KEY_N, KEY_A, KEY_V, KEY_0}, // col 2, row 1
+			 {KEY_R, KEY_SPACE, KEY_Y, KEY_7}, // col 2, row 2
+			 {KEY_X, KEY_C, KEY_W, KEY_4}, // col 2, row 3
+			 {KEY_SLASH, KEY_EQUAL, KEY_APOSTROPHE, KEY_1}, // col 2, row 4
+			 
+			 {KEY_S, KEY_O, KEY_K, KEY_COMMA}, // col 1, row 1
+			 {KEY_D, KEY_E, KEY_P, KEY_8}, // col 1, row 2
+			 {KEY_Q, KEY_U, KEY_F, KEY_5}, // col 1, row 3
+			 {KEY_BACKSLASH, KEY_LEFTBRACE, KEY_SEMICOLON, KEY_2}, // col 1, row 4
+			 
+			 {KEY_H, KEY_L, KEY_Z, KEY_GRAVE}, // col 3, row 1
+			 {KEY_I, KEY_T, KEY_M, KEY_RIGHTBRACE}, // col 3, row 2
+			 {KEY_J, KEY_B, KEY_G, KEY_MINUS}, // col 3, row 3
+			 {KEY_DOT, KEY_9, KEY_6, KEY_3} // col 3, row 4
+};
+
+uint8_t fnmap[] = {KEY_NONE, // dunna do anythin
+		   KEY_LEFT, KEY_DOWN, KEY_RIGHT, KEY_NONE,
+		   KEY_ENTER, KEY_UP, KEY_TAB, KEY_NONE,
+		   KEY_BACKSPACE, KEY_DELETE, KEY_ESC, KEY_FIND,
 };
 		
-KEYMAP keytar_eato(uint16_t k) {
+keymap_t keytar_eato(uint16_t k) {
   // first we transform k into which key of each column is being pressed
   char kc[4] = {(k&0x000f),
 		((k>>4)&0x000f),
@@ -347,41 +354,38 @@ KEYMAP keytar_eato(uint16_t k) {
     //printf("col %d, row %d\n", icol, kc[icol]);
   }
 
-  uint16_t fk=0;
+  uint8_t fk=0;
   if (kc[3]>0) fk=8+kc[3];
-  if (kc[2]>0) fk=4+kc[2];
-  if (kc[1]>0) fk=0+kc[1];
+  else if (kc[2]>0) fk=4+kc[2];
+  else if (kc[1]>0) fk=0+kc[1];
   
   // ==========================
   // now that preperations are complete:
-  KEYMAP m = {0, 0};
+  keymap_t m = {0, 0};
 
   // first deal with modifier keys
-  if (kc[0]&0x2) m.modifier |= KEY_SHIFT;
-  if (kc[0]&0x4) m.modifier |= KEY_CTRL;
-  if (kc[0]&0x8) m.modifier |= KEY_ALT;
+  if (kc[0]&0x2) m.mod |= KEY_MOD_LSHIFT;
+  if (kc[0]&0x4) m.mod |= KEY_MOD_LCTRL;
+  if (kc[0]&0x8) m.mod |= KEY_MOD_LALT;
    
   // find the first column that is pressed.
   // find the second column that is pressed.
   // line up the array indicies into kmap so it just works?
   //printf("3: %d, 2: %d, 1: %d, 0: %d\n", kc[3], kc[2], kc[1], kc[0]);
-  uint16_t c=0;
+  uint8_t c=0;
   if (kc[3]>0 && kc[2]>0 && kc[1]<=0) c=kmap[kc[2]-1][kc[3]-1];
   if (kc[3]>0 && kc[2]<=0 && kc[1]>0) c=kmap[8+kc[3]-1][kc[1]-1];
   if (kc[3]<=0 && kc[2]>0 && kc[1]>0) c=kmap[4+kc[1]-1][kc[2]-1];
-  m.usage = keymap[c].usage;
-  m.modifier |= keymap[c].modifier;
-
+  m.key = c;
 
   if (kc[0]&0x1 && fk>0) {
     printf("fk: %x\n", fk);
-    m=fnmap[fk]; // Fn key maps to some weirder stuff, someday will support release and chords
+    m.key=fnmap[fk]; // Fn key maps to some weirder stuff, someday will support release and chords
   }
 
   return m;
 }
   	
-#include "ble_hid.h"
 
 void app_main()
 {
@@ -404,7 +408,7 @@ void app_main()
 	 (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
   
   uint16_t keys;
-  KEYMAP c;
+  keymap_t c;
   while (1) {
     if(xQueueReceive(key_evt_queue, &keys, portMAX_DELAY)) {
       c = keytar_eato(keys);

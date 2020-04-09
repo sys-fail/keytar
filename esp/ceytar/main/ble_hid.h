@@ -1,5 +1,9 @@
 
-
 void ble_hid_setup(void);
-void ble_hid_send(KEYMAP);
+
+typedef struct {
+  uint8_t mod;
+  uint8_t key;
+} keymap_t;
+void ble_hid_send(keymap_t);
 

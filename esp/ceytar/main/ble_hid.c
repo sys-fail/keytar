@@ -19,7 +19,7 @@
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
 #include "hid_dev.h"
-
+#include "ble_hid.h"
 
 /** 
  * Note:
@@ -150,14 +150,10 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     }
 }
 
-// sneak this little bitch in here
-#define US_KEYBOARD
-#include "HIDKeyboardTypes.h"
-
 // sorry about this i just want it to work for now:
-void ble_hid_send(KEYMAP map) {
-  esp_hidd_send_keyboard_value(hid_conn_id, map.modifier, &map.usage, 1);
-  printf("ble_hid_send cmd: %x, mod: %x\n", map.usage, map.modifier);
+void ble_hid_send(keymap_t map) {
+  esp_hidd_send_keyboard_value(hid_conn_id, map.mod, &map.key, 1);
+  printf("ble_hid_send cmd: %x, mod: %x\n", map.key, map.mod);
 }
 
 void ble_hid_setup()
